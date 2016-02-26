@@ -512,9 +512,15 @@ static int SetupService(bool install, int argc, char **argv)
 
 	String szArgs;
 	szArgs = Utility::EscapeShellArg(szPath) + " --scm";
+	char* scmUser = "NT AUTHORITY\\NetworkService";
 
-	for (int i = 0; i < argc; i++)
-		szArgs += " " + Utility::EscapeShellArg(argv[i]);
+	for (int i = 0; i < argc; i++) {
+		if (!strcmp(argv[i], "--scm-user") && i + 1 < argc) {
+			scmUser = argv[i + 1];
+			i++;
+		} else
+			szArgs += " " + Utility::EscapeShellArg(argv[i]);
+	}
 
 	SC_HANDLE schService = OpenService(schSCManager, "icinga2", SERVICE_ALL_ACCESS);
 
@@ -551,7 +557,7 @@ static int SetupService(bool install, int argc, char **argv)
 			NULL,
 			NULL,
 			NULL,
-			"NT AUTHORITY\\NetworkService",
+			scmUser,
 			NULL);
 
 		if (schService == NULL) {
@@ -588,7 +594,7 @@ static int SetupService(bool install, int argc, char **argv)
 			return 1;
 		}
 
-		printf("Service installed successfully\n");
+		printf("Service successfully installed for user '%s'\n", scmUser);
 	}
 
 	CloseServiceHandle(schService);
@@ -639,8 +645,8 @@ VOID WINAPI ServiceMain(DWORD argc, LPSTR *argv)
 	l_SvcStatus.dwServiceSpecificExitCode = 0;
 
 	ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
-
 	l_Job = CreateJobObject(NULL, NULL);
+	Utility::Sleep(15);
 
 	for (;;) {
 		LPSTR arg = argv[0];
@@ -731,6 +737,7 @@ int main(int argc, char **argv)
 	/* Set command-line arguments. */
 	Application::SetArgC(argc);
 	Application::SetArgV(argv);
+	Utility::Sleep(15);
 
 #ifdef _WIN32
 	if (argc > 1 && strcmp(argv[1], "--scm-install") == 0) {

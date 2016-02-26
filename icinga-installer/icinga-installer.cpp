@@ -43,6 +43,25 @@ static std::string GetIcingaInstallPath(void)
 	return szFileName;
 }
 
+static std::string GetIcingaUser(void)
+{
+	std::string iuser = "\"NT AUTHORITY\\NetworkService\"";
+	std::ifstream initf(GetIcingaInstallPath() + "\\etc\\icinga2\\init.conf");
+	if (initf.good()) {
+		std::string line;
+		while (std::getline(initf, line)) {
+			if (!line.compare(0, 20, "const ServiceUser = ")) {
+				initf.close();
+				return line.substr(20);
+			}
+		}
+	}
+
+	initf.close();
+	return "\"NT AUTHORITY\\NetworkService\"";
+}
+
+
 static bool ExecuteCommand(const std::string& app, const std::string& arguments)
 {
 	SHELLEXECUTEINFO sei = {};
@@ -261,7 +280,7 @@ static int InstallIcinga(void)
 	ExecuteCommand("icacls", "\"" + dataDir + "\" /grant *S-1-5-20:(oi)(ci)m");
 	ExecuteCommand("icacls", "\"" + dataDir + "\\etc\" /inheritance:r /grant:r *S-1-5-20:(oi)(ci)m *S-1-5-32-544:(oi)(ci)f");
 
-	ExecuteIcingaCommand("--scm-install daemon");
+	ExecuteIcingaCommand("--scm-install --scm-user " + GetIcingaUser() + " daemon");
 
 	return 0;
 }
