@@ -46,6 +46,14 @@ Value Dictionary::Get(const String& key) const
 	return it->second;
 }
 
+Value *Dictionary::GetPtr(String& key)
+{
+	ObjectLock olock(this);
+	std::map<String, Value>::const_iterator it = m_Data.find(key);
+	if (it == m_Data.end())
+		return Empty; 
+	return &it->second;
+}
 
 /**
  * Retrieves a value from a dictionary.

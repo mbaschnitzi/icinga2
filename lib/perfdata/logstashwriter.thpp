@@ -1,0 +1,162 @@
+#ifndef LOGSTASHWRITER_TI
+#define LOGSTASHWRITER_TI
+
+#include "base/object.hpp"
+#include "base/type.hpp"
+#include "base/value.hpp"
+#include "base/array.hpp"
+#include "base/dictionary.hpp"
+#include <boost/signals2.hpp>
+
+#include "base/configobject.hpp"
+
+namespace icinga
+{
+
+#ifndef I2_PERFDATA_API
+#	ifdef I2_PERFDATA_BUILD
+#		define I2_PERFDATA_API I2_EXPORT
+#	else /* I2_PERFDATA_BUILD */
+#		define I2_PERFDATA_API I2_IMPORT
+#	endif /* I2_PERFDATA_BUILD */
+#endif /* I2_PERFDATA_API */
+
+class LogstashWriter;
+
+template<>
+class TypeImpl<LogstashWriter> : public Type
+{
+public:
+	virtual String GetName(void) const;
+	virtual int GetAttributes(void) const;
+	virtual Type::Ptr GetBaseType(void) const;
+	virtual int GetFieldId(const String& name) const;
+	virtual Field GetFieldInfo(int id) const;
+	virtual int GetFieldCount(void) const;
+	virtual ObjectFactory GetFactory(void) const;
+	virtual std::vector<String> GetLoadDependencies(void) const;
+public:
+	virtual void RegisterAttributeHandler(int fieldId, const Type::AttributeHandler& callback);
+};
+
+
+template<>
+class I2_PERFDATA_API ObjectImpl<LogstashWriter> : public ConfigObject
+{
+public:
+	DECLARE_PTR_TYPEDEFS(ObjectImpl<LogstashWriter>);
+
+	virtual void Validate(int types, const ValidationUtils& utils) override;
+	void SimpleValidateHost(const String& value, const ValidationUtils& utils);
+	void SimpleValidatePort(const String& value, const ValidationUtils& utils);
+	void SimpleValidateHostNameTemplate(const String& value, const ValidationUtils& utils);
+	void SimpleValidateServiceNameTemplate(const String& value, const ValidationUtils& utils);
+	void SimpleValidateEnableSendThresholds(bool value, const ValidationUtils& utils);
+	void SimpleValidateEnableSendMetadata(bool value, const ValidationUtils& utils);
+	void SimpleValidateEnableLegacyMode(bool value, const ValidationUtils& utils);
+public:
+	ObjectImpl<LogstashWriter>(void);
+public:
+	~ObjectImpl<LogstashWriter>(void);
+public:
+	virtual void SetField(int id, const Value& value, bool suppress_events = false, const Value& cookie = Empty) override;
+public:
+	virtual Value GetField(int id) const override;
+public:
+	virtual void ValidateField(int id, const Value& value, const ValidationUtils& utils) override;
+public:
+	virtual void NotifyField(int id, const Value& cookie = Empty) override;
+public:
+	virtual Object::Ptr NavigateField(int id) const override;
+public:
+	virtual String GetHost(void) const;
+public:
+	virtual String GetPort(void) const;
+public:
+	virtual String GetHostNameTemplate(void) const;
+public:
+	virtual String GetServiceNameTemplate(void) const;
+public:
+	virtual bool GetEnableSendThresholds(void) const;
+public:
+	virtual bool GetEnableSendMetadata(void) const;
+public:
+	virtual bool GetEnableLegacyMode(void) const;
+public:
+	virtual void SetHost(const String& value, bool suppress_events = false, const Value& cookie = Empty);
+public:
+	virtual void SetPort(const String& value, bool suppress_events = false, const Value& cookie = Empty);
+public:
+	virtual void SetHostNameTemplate(const String& value, bool suppress_events = false, const Value& cookie = Empty);
+public:
+	virtual void SetServiceNameTemplate(const String& value, bool suppress_events = false, const Value& cookie = Empty);
+public:
+	virtual void SetEnableSendThresholds(bool value, bool suppress_events = false, const Value& cookie = Empty);
+public:
+	virtual void SetEnableSendMetadata(bool value, bool suppress_events = false, const Value& cookie = Empty);
+public:
+	virtual void SetEnableLegacyMode(bool value, bool suppress_events = false, const Value& cookie = Empty);
+protected:
+public:
+	virtual void NotifyHost(const Value& cookie = Empty);
+public:
+	virtual void NotifyPort(const Value& cookie = Empty);
+public:
+	virtual void NotifyHostNameTemplate(const Value& cookie = Empty);
+public:
+	virtual void NotifyServiceNameTemplate(const Value& cookie = Empty);
+public:
+	virtual void NotifyEnableSendThresholds(const Value& cookie = Empty);
+public:
+	virtual void NotifyEnableSendMetadata(const Value& cookie = Empty);
+public:
+	virtual void NotifyEnableLegacyMode(const Value& cookie = Empty);
+private:
+	inline String GetDefaultHost(void) const;
+private:
+	inline String GetDefaultPort(void) const;
+private:
+	inline String GetDefaultHostNameTemplate(void) const;
+private:
+	inline String GetDefaultServiceNameTemplate(void) const;
+private:
+	inline bool GetDefaultEnableSendThresholds(void) const;
+private:
+	inline bool GetDefaultEnableSendMetadata(void) const;
+private:
+	inline bool GetDefaultEnableLegacyMode(void) const;
+protected:
+	virtual void ValidateHost(const String& value, const ValidationUtils& utils);
+protected:
+	virtual void ValidatePort(const String& value, const ValidationUtils& utils);
+protected:
+	virtual void ValidateHostNameTemplate(const String& value, const ValidationUtils& utils);
+protected:
+	virtual void ValidateServiceNameTemplate(const String& value, const ValidationUtils& utils);
+protected:
+	virtual void ValidateEnableSendThresholds(bool value, const ValidationUtils& utils);
+protected:
+	virtual void ValidateEnableSendMetadata(bool value, const ValidationUtils& utils);
+protected:
+	virtual void ValidateEnableLegacyMode(bool value, const ValidationUtils& utils);
+private:
+	String m_Host;
+	String m_Port;
+	String m_HostNameTemplate;
+	String m_ServiceNameTemplate;
+	bool m_EnableSendThresholds;
+	bool m_EnableSendMetadata;
+	bool m_EnableLegacyMode;
+public:
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnHostChanged;
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnPortChanged;
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnHostNameTemplateChanged;
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnServiceNameTemplateChanged;
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnEnableSendThresholdsChanged;
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnEnableSendMetadataChanged;
+	static boost::signals2::signal<void (const intrusive_ptr<LogstashWriter>&, const Value&)> OnEnableLegacyModeChanged;
+};
+
+}
+#endif /* LOGSTASHWRITER_TI */
+

@@ -1,3 +1,6 @@
+# icinga2/lib/perfdata/CMakeLists.txt
+
+
 # Icinga 2
 # Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)
 #
@@ -17,12 +20,13 @@
 
 mkclass_target(gelfwriter.ti gelfwriter.tcpp gelfwriter.thpp)
 mkclass_target(graphitewriter.ti graphitewriter.tcpp graphitewriter.thpp)
+mkclass_target(logstashwriter.ti logstashwriter.tcpp logstashwriter.thpp)
 mkclass_target(influxdbwriter.ti influxdbwriter.tcpp influxdbwriter.thpp)
 mkclass_target(opentsdbwriter.ti opentsdbwriter.tcpp opentsdbwriter.thpp)
 mkclass_target(perfdatawriter.ti perfdatawriter.tcpp perfdatawriter.thpp)
 
 set(perfdata_SOURCES
-  gelfwriter.cpp gelfwriter.thpp graphitewriter.cpp graphitewriter.thpp influxdbwriter.cpp influxdbwriter.thpp opentsdbwriter.cpp opentsdbwriter.thpp perfdatawriter.cpp perfdatawriter.thpp
+  gelfwriter.cpp gelfwriter.thpp graphitewriter.cpp graphitewriter.thpp logstashwriter.cpp logstashwriter.thpp influxdbwriter.cpp influxdbwriter.thpp opentsdbwriter.cpp opentsdbwriter.thpp perfdatawriter.cpp perfdatawriter.thpp
 )
 
 if(ICINGA2_UNITY_BUILD)
@@ -43,10 +47,15 @@ set_target_properties (
 install_if_not_exists(
   ${PROJECT_SOURCE_DIR}/etc/icinga2/features-available/gelf.conf
   ${CMAKE_INSTALL_SYSCONFDIR}/icinga2/features-available
-)
+)  
 
 install_if_not_exists(
   ${PROJECT_SOURCE_DIR}/etc/icinga2/features-available/graphite.conf
+  ${CMAKE_INSTALL_SYSCONFDIR}/icinga2/features-available
+)
+
+install_if_not_exists(
+  ${PROJECT_SOURCE_DIR}/etc/icinga2/features-available/logstash.conf
   ${CMAKE_INSTALL_SYSCONFDIR}/icinga2/features-available
 )
 

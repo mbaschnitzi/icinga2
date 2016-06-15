@@ -17,10 +17,10 @@
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
  ******************************************************************************/
 
-#ifndef GELFWRITER_H
-#define GELFWRITER_H
+#ifndef LOGSTASHWRITER_H
+#define LOGSTASHWRITER_H
 
-#include "perfdata/gelfwriter.thpp"
+#include "perfdata/logstashwriter.thpp"
 #include "icinga/service.hpp"
 #include "base/configobject.hpp"
 #include "base/tcpsocket.hpp"
@@ -31,37 +31,37 @@ namespace icinga
 {
 
 /**
- * An Icinga gelf writer.
+ * An Icinga logstash writer.
  *
  * @ingroup perfdata
  */
-class GelfWriter : public ObjectImpl<GelfWriter>
+class LogstashWriter : public ObjectImpl<LogstashWriter>
 {
 public:
-	DECLARE_OBJECT(GelfWriter);
-	DECLARE_OBJECTNAME(GelfWriter);
+        DECLARE_OBJECT(LogstashWriter);
+        DECLARE_OBJECTNAME(LogstashWriter);
 
 protected:
-	virtual void Start(bool runtimeCreated) override;
+        virtual void Start(bool runtimeCreated) override;
 
 private:
-	Stream::Ptr m_Stream;
+        Stream::Ptr m_Stream;
 
-	Timer::Ptr m_ReconnectTimer;
+        Timer::Ptr m_ReconnectTimer;
 
-	void CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr);
-	void NotificationToUserHandler(const Notification::Ptr& notification, const Checkable::Ptr& checkable,
-	const User::Ptr& user, NotificationType notification_type, CheckResult::Ptr const& cr,
-	const String& author, const String& comment_text, const String& command_name);
-	void StateChangeHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr, StateType type);
-	void SendLogMessage(const String& message);
+        void CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr);
+        void NotificationToUserHandler(const Notification::Ptr& notification, const Checkable::Ptr& checkable,
+        const User::Ptr& user, NotificationType notification_type, CheckResult::Ptr const& cr,
+        const String& author, const String& comment_text, const String& command_name);
+        void StateChangeHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr, StateType type);
+        void SendLogMessage(const String& message);
 
-	String ComposeGelfMessage(const Dictionary::Ptr& fields, const String& source, double ts);
+        String ComposeLogstashMessage(const Dictionary::Ptr& fields, const String& source, double ts);
+	String regex(String& s);
 
-	void ReconnectTimerHandler(void);
+        void ReconnectTimerHandler(void);
 };
 
 }
 
-#endif /* GELFWRITER_H */
-
+#endif /* LOGSTASHWRITER_H */

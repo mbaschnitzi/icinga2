@@ -17,10 +17,10 @@
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
  ******************************************************************************/
 
-#ifndef GELFWRITER_H
-#define GELFWRITER_H
+#ifndef LOGSTASHWRITER_H
+#define LOGSTASHWRITER_H
 
-#include "perfdata/gelfwriter.thpp"
+#include "perfdata/logstashwriter.thpp"
 #include "icinga/service.hpp"
 #include "base/configobject.hpp"
 #include "base/tcpsocket.hpp"
@@ -31,37 +31,40 @@ namespace icinga
 {
 
 /**
- * An Icinga gelf writer.
+ * An Icinga logstash writer.
  *
  * @ingroup perfdata
  */
-class GelfWriter : public ObjectImpl<GelfWriter>
+class LogstashWriter  : public ObjectImpl<LogstashWriter>
 {
 public:
-	DECLARE_OBJECT(GelfWriter);
-	DECLARE_OBJECTNAME(GelfWriter);
+        DECLARE_OBJECT(LogstashWriter );
+        DECLARE_OBJECTNAME(LogstashWriter );
+
+        static void StatsFunc(const Dictionary::Ptr& status, const Array::Ptr& perfdata);
+
+        virtual void ValidateHostNameTemplate(const String& value, const ValidationUtils& utils) override;
+        virtual void ValidateServiceNameTemplate(const String& value, const ValidationUtils& utils) override;
 
 protected:
-	virtual void Start(bool runtimeCreated) override;
+        virtual void Start(bool runtimeCreated) override;
 
 private:
-	Stream::Ptr m_Stream;
+        Stream::Ptr m_Stream;
 
-	Timer::Ptr m_ReconnectTimer;
+        Timer::Ptr m_ReconnectTimer;
 
-	void CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr);
-	void NotificationToUserHandler(const Notification::Ptr& notification, const Checkable::Ptr& checkable,
-	const User::Ptr& user, NotificationType notification_type, CheckResult::Ptr const& cr,
-	const String& author, const String& comment_text, const String& command_name);
-	void StateChangeHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr, StateType type);
-	void SendLogMessage(const String& message);
+        void CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr);
+        void SendMetric(const String& prefix, const String& name, double value, double ts);
+        void SendPerfdata(const String& prefix, const CheckResult::Ptr& cr, double ts);
+        static String EscapeMetric(const String& str, bool legacyMode = false);
+        static String EscapeMetricLabel(const String& str);
+        static Value EscapeMacroMetric(const Value& value, bool legacyMode = false);
 
-	String ComposeGelfMessage(const Dictionary::Ptr& fields, const String& source, double ts);
-
-	void ReconnectTimerHandler(void);
+        void ReconnectTimerHandler(void);
 };
 
 }
 
-#endif /* GELFWRITER_H */
+#endif /* LOGSTASHWRITER_H */
 
