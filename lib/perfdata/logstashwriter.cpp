@@ -27,7 +27,6 @@
 
 #include "icinga/notification.hpp"
 /////////////////////////////////////////////
-#include "base/tcpsocket.hpp"
 #include "base/configtype.hpp"
 #include "base/objectlock.hpp"
 #include "base/logger.hpp"
@@ -40,13 +39,12 @@
 /////////////////////////////////////////////
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <vector>
-#include <fstream>
 #include <string>
 
 using namespace icinga;
 
 REGISTER_TYPE(LogstashWriter);
+
 
 void LogstashWriter::Start(bool runtimeCreated)
 {
@@ -66,12 +64,23 @@ void LogstashWriter::Start(bool runtimeCreated)
         Service::OnStateChange.connect(boost::bind(&LogstashWriter::StateChangeHandler, this, _1, _2, _3));
 }
 
+
 void LogstashWriter::ReconnectTimerHandler(void)
 {
-        if (m_Stream)
-                return;
+ 	if (m_Stream)	
+		return;
 
-        TcpSocket::Ptr socket = new TcpSocket();
+	Log(LogCritical, "LogstashWriter") << "using " << GetProtocol() << " socket";
+        if(GetProtocol()== "udp")
+		makeUdpSocket();
+	else
+		makeTcpSocket();
+
+}
+
+void LogstashWriter::makeUdpSocket()
+{
+        UdpSocket::Ptr socket = new UdpSocket();
 
         Log(LogNotice, "LogstashWriter")
             << "Reconnecting to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
@@ -86,6 +95,24 @@ void LogstashWriter::ReconnectTimerHandler(void)
 
         m_Stream = new NetworkStream(socket);
 }
+
+void LogstashWriter::makeTcpSocket()
+{
+        TcpSocket::Ptr socket = new TcpSocket();
+
+        Log(LogNotice, "LogstashWriter")
+            << "Reconnecting to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
+
+        try {
+                socket->Connect(GetHost(), GetPort());
+        } catch (std::exception&) {
+                Log(LogCritical, "LogstashWriter")
+                    << "Can't connect to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
+                return;
+        }
+
+        m_Stream = new NetworkStream(socket);
+}	
 
 void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr)
 {
@@ -122,7 +149,8 @@ void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const C
         fields->Set("reachable",  checkable->IsReachable());
 
         if (cr) {
-                fields->Set("short_message", CompatUtility::GetCheckResultOutput(cr));
+		//String s = CompatUtility::GetCheckResultOutput(cr);
+		fields->Set("short_message", CompatUtility::GetCheckResultOutput(cr));
                 fields->Set("full_message", CompatUtility::GetCheckResultLongOutput(cr));
                 fields->Set("check_source", cr->GetCheckSource());
         }
@@ -140,14 +168,13 @@ void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const C
                                 else {
                                         try {
                                                 pdv = PerfdataValue::Parse(val);
-
-                                                String escaped_key = pdv->GetLabel();
+					        String escaped_key = pdv->GetLabel();
+						Log(LogCritical, "LogstashWriter") << "pdvLabel: " << escaped_key;
                                                 boost::replace_all(escaped_key, " ", "_");
                                                 boost::replace_all(escaped_key, ".", "_");
                                                 boost::replace_all(escaped_key, "\\", "_");
                                                 boost::algorithm::replace_all(escaped_key, "::", ".");
-			 			Log(LogCritical, "LogstashWriter ") << "bullshit" << escaped_key << "\n";
-                                                fields->Set(escaped_key, pdv->GetValue());
+			 			fields->Set(escaped_key, pdv->GetValue());
 
                                                 if (pdv->GetMin())
                                                         fields->Set(escaped_key + "_min", pdv->GetMin());
@@ -158,7 +185,7 @@ void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const C
                                                 if (pdv->GetCrit())
                                                         fields->Set(escaped_key + "_crit", pdv->GetCrit());
                                         } catch (const std::exception&) {
-                                                Log(LogWarning, "GelfWriter")
+                                                Log(LogWarning, "LogstashWriter")
                                                     << "Ignoring invalid perfdata value: '" << val << "' for object '"
                                                     << checkable-GetName() << "'.";
                                         }
@@ -193,29 +220,28 @@ void LogstashWriter::NotificationToUserHandler(const Notification::Ptr& notifica
         if (notification_type == NotificationCustom || notification_type == NotificationAcknowledgement) {
                 author_comment = author + ";" + comment_text;
         }
-
-        String output;
-
+		
+		String output;
         if (cr)
-                output = CompatUtility::GetCheckResultOutput(cr);
-
+			output = CompatUtility::GetCheckResultOutput(cr);
+			
         Dictionary::Ptr fields = new Dictionary();
 
         if (service) {
-                fields->Set("_type", "SERVICE NOTIFICATION");
-                fields->Set("_service", service->GetShortName());
+                fields->Set("type", "SERVICE NOTIFICATION");
+                fields->Set("service", service->GetShortName());
                 fields->Set("short_message", output);
         } else {
-                fields->Set("_type", "HOST NOTIFICATION");
-                fields->Set("short_message", "(" + CompatUtility::GetHostStateString(host) + ")");
+                fields->Set("type", "HOST NOTIFICATION");
+                fields->Set("short_message", CompatUtility::GetHostStateString(host)+ ")");
         }
 
-        fields->Set("_state", service ? Service::StateToString(service->GetState()) : Host::StateToString(host->GetState()));
+        fields->Set("state", service ? Service::StateToString(service->GetState()) : Host::StateToString(host->GetState()));
 
-        fields->Set("_hostname", host->GetName());
-        fields->Set("_command", command_name);
-        fields->Set("_notification_type", notification_type_str);
-        fields->Set("_comment", author_comment);
+        fields->Set("hostname", host->GetName());
+        fields->Set("command", command_name);
+        fields->Set("notification_type", notification_type_str);
+        fields->Set("comment", author_comment);
 
         SendLogMessage(ComposeLogstashMessage(fields, GetSource(), ts));
 }
@@ -234,26 +260,26 @@ void LogstashWriter::StateChangeHandler(const Checkable::Ptr& checkable, const C
 
         Dictionary::Ptr fields = new Dictionary();
 
-        fields->Set("_state", service ? Service::StateToString(service->GetState()) : Host::StateToString(host->GetState()));
-        fields->Set("_type", "STATE CHANGE");
-        fields->Set("_current_check_attempt", checkable->GetCheckAttempt());
-        fields->Set("_max_check_attempts", checkable->GetMaxCheckAttempts());
-        fields->Set("_hostname", host->GetName());
+        fields->Set("state", service ? Service::StateToString(service->GetState()) : Host::StateToString(host->GetState()));
+        fields->Set("type", "STATE CHANGE");
+        fields->Set("current_check_attempt", checkable->GetCheckAttempt());
+        fields->Set("max_check_attempts", checkable->GetMaxCheckAttempts());
+        fields->Set("hostname", host->GetName());
 
         if (service) {
-                fields->Set("_service_name", service->GetShortName());
-                fields->Set("_service_state", Service::StateToString(service->GetState()));
-                fields->Set("_last_state", service->GetLastState());
-                fields->Set("_last_hard_state", service->GetLastHardState());
+                fields->Set("service_name", service->GetShortName());
+                fields->Set("service_state", Service::StateToString(service->GetState()));
+                fields->Set("last_state", service->GetLastState());
+                fields->Set("last_hard_state", service->GetLastHardState());
         } else {
-                fields->Set("_last_state", host->GetLastState());
-                fields->Set("_last_hard_state", host->GetLastHardState());
+                fields->Set("last_state", host->GetLastState());
+                fields->Set("last_hard_state", host->GetLastHardState());
         }
 
         if (cr) {
                 fields->Set("short_message", CompatUtility::GetCheckResultOutput(cr));
                 fields->Set("full_message", CompatUtility::GetCheckResultLongOutput(cr));
-                fields->Set("_check_source", cr->GetCheckSource());
+                fields->Set("check_source", cr->GetCheckSource());
         }
         SendLogMessage(ComposeLogstashMessage(fields, GetSource(), ts));
 }
@@ -263,8 +289,7 @@ String LogstashWriter::ComposeLogstashMessage(const Dictionary::Ptr& fields, con
         fields->Set("version", "1.1");
         fields->Set("host", source);
         fields->Set("timestamp", ts);
-        String logstashObj= JsonEncode(fields);
-        boost::replace_all(logstashObj, "_", "");
+        String logstashObj= JsonEncode(fields);        
 	return logstashObj+ "\n";
 }
 
@@ -278,44 +303,9 @@ void LogstashWriter::SendLogMessage(const String& message)
         try {
              m_Stream->Write(&message[0], message.GetLength());
         } catch (const std::exception& ex) {
-                Log(LogCritical, "LogstashWriter") << "Cannot write to TCP socket on host '" << GetHost() << "' port '" << GetPort() << "'.";
+                Log(LogCritical, "LogstashWriter") << "Cannot write to " << GetProtocol() << " socket on host '" << GetHost() << "' port '" << GetPort() << "'.";
 					
                 m_Stream.reset();
         }
 }
 
-
-/*******replaces pattern inside a string, pattern are delimited by \n; linear "pattern"\n"replacement" 
-		can be changed at runtime
-	{"\t,   "{\n",  "\n",   " = ",  ",}",   "\\", ", }",    "_"}
-	{"\"",   "{",    ", ",   "\":",  "}",    "", "}\n",      ""}  
-	\t	\"	{\n	{	\n	, 	 = \":", ,}	}	 \\		, }	}\n	_	 //replace \t int .txt with \n !!!		
-********************************************************************************************************/
-// replace as escapeMetric
-String LogstashWriter::regex(String& s)
-{
-        std::vector<std::string> pattern, replace;
-        std::ifstream file("/etc/icinga2/conf.d/pattern.txt");
-	String temp1, temp2;
-        try{
-		if(file.is_open()){  
-			while(!file.eof()){
-                        std::string temp1, temp2;
-                        getline(file, temp1);
-                        pattern.push_back(temp1);
-                        getline(file, temp2);
-                        replace.push_back(temp2);
-                    }
-                file.close();
-		}
-        } catch (const std::exception& ex) {
-			Log(LogCritical, "LogstashWriter") << "Cannot open pattern sheet.";
-		}
-		String tmp = s;
-		for(int i=0; i<pattern.size(); i++){
-			boost::replace_all(s, pattern[i], replace[i]);
-        	}
-	//remove later	
-        Log(LogCritical, "LogstashWriter")<< "Original Obj: " << tmp << "\n" << "Altered Obj: "<< s;
-        return s+ "\n";
-} 

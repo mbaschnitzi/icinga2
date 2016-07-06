@@ -29,12 +29,19 @@ class LogstashWriter : ConfigObject
 	[config] String host {
 		default {{{ return "127.0.0.1"; }}}
 	};
+
 	[config] String port {
 		default {{{ return "12201"; }}}
 	};
+
+	[config] String protocol {
+		default {{{ return "tcp"; }}}
+	};
+
 	[config] String source {
 		default {{{ return "icinga2"; }}}
 	};
+
 	[config] bool enable_send_perfdata {
 		default {{{ return false; }}}
 	};

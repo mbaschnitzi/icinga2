@@ -17,54 +17,28 @@
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
  ******************************************************************************/
 
-#ifndef LOGSTASHWRITER_H
-#define LOGSTASHWRITER_H
+#ifndef UDPSOCKET_H
+#define UDPSOCKET_H
 
-#include "perfdata/logstashwriter.thpp"
-#include "icinga/service.hpp"
-#include "base/configobject.hpp"
-#include "base/udpsocket.hpp"
-#include "base/tcpsocket.hpp"
-#include "base/timer.hpp"
-#include <fstream>
-#include <string>
+#include "base/i2-base.hpp"
+#include "base/socket.hpp"
 
 namespace icinga
 {
 
 /**
- * An Icinga logstash writer.
+ * A UDP socket.
  *
- * @ingroup perfdata
+ * @ingroup base
  */
-class LogstashWriter : public ObjectImpl<LogstashWriter>
+class I2_BASE_API UdpSocket : public Socket
 {
 public:
-        DECLARE_OBJECT(LogstashWriter);
-        DECLARE_OBJECTNAME(LogstashWriter);
+	DECLARE_PTR_TYPEDEFS(UdpSocket);
 
-protected:
-        virtual void Start(bool runtimeCreated) override;
-
-private:
-        Stream::Ptr m_Stream;
-
-        Timer::Ptr m_ReconnectTimer;
-
-        void CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr);
-        void NotificationToUserHandler(const Notification::Ptr& notification, const Checkable::Ptr& checkable,
-        const User::Ptr& user, NotificationType notification_type, CheckResult::Ptr const& cr,
-        const String& author, const String& comment_text, const String& command_name);
-        void StateChangeHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr, StateType type);
-        void SendLogMessage(const String& message);
-	void makeTcpSocket();
-	void makeUdpSocket();
-        String ComposeLogstashMessage(const Dictionary::Ptr& fields, const String& source, double ts);
-	
-
-        void ReconnectTimerHandler(void);
+	void Connect(const String& node, const String& service);
 };
 
 }
 
-#endif /* LOGSTASHWRITER_H */
+#endif /* UDPSOCKET_H */
