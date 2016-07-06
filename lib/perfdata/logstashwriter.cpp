@@ -149,7 +149,6 @@ void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const C
         fields->Set("reachable",  checkable->IsReachable());
 
         if (cr) {
-		//String s = CompatUtility::GetCheckResultOutput(cr);
 		fields->Set("short_message", CompatUtility::GetCheckResultOutput(cr));
                 fields->Set("full_message", CompatUtility::GetCheckResultLongOutput(cr));
                 fields->Set("check_source", cr->GetCheckSource());
