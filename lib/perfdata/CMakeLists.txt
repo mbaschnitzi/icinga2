@@ -1,6 +1,3 @@
-# icinga2/lib/perfdata/CMakeLists.txt
-
-
 # Icinga 2
 # Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)
 #
@@ -47,7 +44,7 @@ set_target_properties (
 install_if_not_exists(
   ${PROJECT_SOURCE_DIR}/etc/icinga2/features-available/gelf.conf
   ${CMAKE_INSTALL_SYSCONFDIR}/icinga2/features-available
-)  
+)
 
 install_if_not_exists(
   ${PROJECT_SOURCE_DIR}/etc/icinga2/features-available/graphite.conf

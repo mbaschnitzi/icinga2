@@ -19,14 +19,12 @@
 
 #include "perfdata/logstashwriter.hpp"
 #include "perfdata/logstashwriter.tcpp"
-/////////////////////////////////////////////
 #include "icinga/service.hpp"
 #include "icinga/macroprocessor.hpp"
 #include "icinga/compatutility.hpp"
 #include "icinga/perfdatavalue.hpp"
 
 #include "icinga/notification.hpp"
-/////////////////////////////////////////////
 #include "base/configtype.hpp"
 #include "base/objectlock.hpp"
 #include "base/logger.hpp"
@@ -36,7 +34,6 @@
 
 #include "base/json.hpp"
 #include "base/context.hpp"
-/////////////////////////////////////////////
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <string>
@@ -67,58 +64,33 @@ void LogstashWriter::Start(bool runtimeCreated)
 
 void LogstashWriter::ReconnectTimerHandler(void)
 {
- 	if (m_Stream)	
+ 	if (m_Stream)
 		return;
-
-	Log(LogCritical, "LogstashWriter") << "using " << GetProtocol() << " socket";
-        if(GetProtocol()== "udp")
-		makeUdpSocket();
+	Socket::Ptr socket;
+	if(GetDefaultProtocol() == true)
+		socket = new TcpSocket();
 	else
-		makeTcpSocket();
-
-}
-
-void LogstashWriter::makeUdpSocket()
-{
-        UdpSocket::Ptr socket = new UdpSocket();
+		socket = new UdpSocket();
 
         Log(LogNotice, "LogstashWriter")
-            << "Reconnecting to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
+            << "Reconnecting to Logstash endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
 
         try {
                 socket->Connect(GetHost(), GetPort());
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
                 Log(LogCritical, "LogstashWriter")
-                    << "Can't connect to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
+                    << "Can't connect to Logstash endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
                 return;
         }
 
         m_Stream = new NetworkStream(socket);
 }
-
-void LogstashWriter::makeTcpSocket()
-{
-        TcpSocket::Ptr socket = new TcpSocket();
-
-        Log(LogNotice, "LogstashWriter")
-            << "Reconnecting to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
-
-        try {
-                socket->Connect(GetHost(), GetPort());
-        } catch (std::exception&) {
-                Log(LogCritical, "LogstashWriter")
-                    << "Can't connect to LOGSTASH endpoint '" << GetHost() << "' port '" << GetPort() << "'.";
-                return;
-        }
-
-        m_Stream = new NetworkStream(socket);
-}	
 
 void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr)
 {
         CONTEXT("LOGSTASGH Processing check result for '" + checkable->GetName() + "'");
 
-        Log(LogDebug, "LogstashWriter")<< "LOGSTASH Processing check result for '" << checkable->GetName() << "'";
+        Log(LogDebug, "LogstashWriter")<< "Logstash Processing check result for '" << checkable->GetName() << "'";
 
         Host::Ptr host;
         Service::Ptr service;
@@ -168,8 +140,7 @@ void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const C
                                         try {
                                                 pdv = PerfdataValue::Parse(val);
 					        String escaped_key = pdv->GetLabel();
-						Log(LogCritical, "LogstashWriter") << "pdvLabel: " << escaped_key;
-                                                boost::replace_all(escaped_key, " ", "_");
+						boost::replace_all(escaped_key, " ", "_");
                                                 boost::replace_all(escaped_key, ".", "_");
                                                 boost::replace_all(escaped_key, "\\", "_");
                                                 boost::algorithm::replace_all(escaped_key, "::", ".");
@@ -196,16 +167,15 @@ void LogstashWriter::CheckResultHandler(const Checkable::Ptr& checkable, const C
         SendLogMessage(ComposeLogstashMessage(fields, GetSource(), ts));
 }
 
-     
 
 void LogstashWriter::NotificationToUserHandler(const Notification::Ptr& notification, const Checkable::Ptr& checkable,
     const User::Ptr& user, NotificationType notification_type, CheckResult::Ptr const& cr,
     const String& author, const String& comment_text, const String& command_name)
 {
-        CONTEXT("LOGSTASH Processing notification to all users '" + checkable->GetName() + "'");
+        CONTEXT("Logstash Processing notification to all users '" + checkable->GetName() + "'");
 
         Log(LogDebug, "LogstashWriter")
-            << "LOGSTASH Processing notification for '" << checkable->GetName() << "'";
+            << "Logstash Processing notification for '" << checkable->GetName() << "'";
 
         Host::Ptr host;
         Service::Ptr service;
@@ -219,11 +189,11 @@ void LogstashWriter::NotificationToUserHandler(const Notification::Ptr& notifica
         if (notification_type == NotificationCustom || notification_type == NotificationAcknowledgement) {
                 author_comment = author + ";" + comment_text;
         }
-		
+
 		String output;
         if (cr)
 			output = CompatUtility::GetCheckResultOutput(cr);
-			
+
         Dictionary::Ptr fields = new Dictionary();
 
         if (service) {
@@ -247,10 +217,10 @@ void LogstashWriter::NotificationToUserHandler(const Notification::Ptr& notifica
 
 void LogstashWriter::StateChangeHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr, StateType type)
 {
-        CONTEXT("LOGSTASH Processing state change '" + checkable->GetName() + "'");
+        CONTEXT("Logstash Processing state change '" + checkable->GetName() + "'");
 
         Log(LogDebug, "LogstashWriter")
-            << "LOGSTASH Processing state change for '" << checkable->GetName() << "'";
+            << "Logstash Processing state change for '" << checkable->GetName() << "'";
 
         Host::Ptr host;
         Service::Ptr service;
@@ -288,7 +258,7 @@ String LogstashWriter::ComposeLogstashMessage(const Dictionary::Ptr& fields, con
         fields->Set("version", "1.1");
         fields->Set("host", source);
         fields->Set("timestamp", ts);
-        String logstashObj= JsonEncode(fields);        
+        String logstashObj= JsonEncode(fields);
 	return logstashObj+ "\n";
 }
 
@@ -302,8 +272,9 @@ void LogstashWriter::SendLogMessage(const String& message)
         try {
              m_Stream->Write(&message[0], message.GetLength());
         } catch (const std::exception& ex) {
-                Log(LogCritical, "LogstashWriter") << "Cannot write to " << GetProtocol() << " socket on host '" << GetHost() << "' port '" << GetPort() << "'.";
-					
+                Log(LogCritical, "LogstashWriter") << "Cannot write to " << 
+		((GetDefaultProtocol()==true) ? "tcp" : "udp") << " socket on host '" << GetHost() << "' port '" << GetPort() << "'.";
+
                 m_Stream.reset();
         }
 }

@@ -31,11 +31,11 @@ class LogstashWriter : ConfigObject
 	};
 
 	[config] String port {
-		default {{{ return "12201"; }}}
+		default {{{ return "9201"; }}}
 	};
-
-	[config] String protocol {
-		default {{{ return "tcp"; }}}
+	
+	[config] bool defaultProtocol {
+		default {{{ return "true"; }}}
 	};
 
 	[config] String source {

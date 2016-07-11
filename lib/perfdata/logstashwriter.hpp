@@ -23,8 +23,8 @@
 #include "perfdata/logstashwriter.thpp"
 #include "icinga/service.hpp"
 #include "base/configobject.hpp"
-#include "base/udpsocket.hpp"
 #include "base/tcpsocket.hpp"
+#include "base/udpsocket.hpp"
 #include "base/timer.hpp"
 #include <fstream>
 #include <string>
@@ -57,10 +57,7 @@ private:
         const String& author, const String& comment_text, const String& command_name);
         void StateChangeHandler(const Checkable::Ptr& checkable, const CheckResult::Ptr& cr, StateType type);
         void SendLogMessage(const String& message);
-	void makeTcpSocket();
-	void makeUdpSocket();
-        String ComposeLogstashMessage(const Dictionary::Ptr& fields, const String& source, double ts);
-	
+	String ComposeLogstashMessage(const Dictionary::Ptr& fields, const String& source, double ts);
 
         void ReconnectTimerHandler(void);
 };

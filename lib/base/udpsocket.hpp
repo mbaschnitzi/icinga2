@@ -34,11 +34,12 @@ namespace icinga
 class I2_BASE_API UdpSocket : public Socket
 {
 public:
-	DECLARE_PTR_TYPEDEFS(UdpSocket);
+       	DECLARE_PTR_TYPEDEFS(UdpSocket);
 
-	void Connect(const String& node, const String& service);
+private: 
+	void SocketType(); 	
 };
-
 }
 
 #endif /* UDPSOCKET_H */
+
