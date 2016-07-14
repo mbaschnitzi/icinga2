@@ -28,8 +28,8 @@
 using namespace icinga;
 
 void TcpSocket::SocketType(){
-        *&socktype = SOCK_STREAM;
-        *&protocol = IPPROTO_TCP;
+        socktype = SOCK_STREAM;
+        protocol = IPPROTO_TCP;
 }
 
 /**

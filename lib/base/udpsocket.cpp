@@ -28,6 +28,6 @@
 using namespace icinga;
 
 void UdpSocket::SocketType(){
-	*&socktype = SOCK_DGRAM;
-	*&protocol = IPPROTO_UDP;
+	socktype = SOCK_DGRAM;
+	protocol = IPPROTO_UDP;
 }
