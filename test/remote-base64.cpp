@@ -18,9 +18,8 @@
  ******************************************************************************/
 
 #include "remote/base64.hpp"
-#include <boost/test/unit_test.hpp>
+#include <BoostTestTargetConfig.h>
 #include <boost/foreach.hpp>
-
 #include <iostream>
 
 using namespace icinga;

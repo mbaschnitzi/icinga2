@@ -17,9 +17,6 @@
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
  ******************************************************************************/
 
-#define BOOST_TEST_MAIN
-#define BOOST_TEST_MODULE icinga2_test
-
 #include "cli/daemonutility.hpp"
 #include "config/configcompiler.hpp"
 #include "config/configitem.hpp"
@@ -36,8 +33,6 @@ struct LivestatusFixture
 	    : TestConfig("test-config.conf")
 	{
 		BOOST_TEST_MESSAGE("setup global config fixture");
-
-		Application::InitializeBase();
 
 		String cfg_file_path = TestConfig;
 		String cfg_file_path_tmp = TestConfig + ".tmp";
@@ -103,12 +98,9 @@ struct LivestatusFixture
 		BOOST_TEST_MESSAGE("cleanup global config fixture");
 
 		unlink(TestConfig.CStr());
-
-		Application::UninitializeBase();
 	}
 
 	String TestConfig;
 };
 
 BOOST_GLOBAL_FIXTURE(LivestatusFixture);
-

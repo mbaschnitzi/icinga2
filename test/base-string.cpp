@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "base/string.hpp"
-#include <boost/test/unit_test.hpp>
+#include <BoostTestTargetConfig.h>
 #include <boost/foreach.hpp>
 
 using namespace icinga;

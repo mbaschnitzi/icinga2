@@ -23,7 +23,7 @@
 #include "base/serializer.hpp"
 #include "base/array.hpp"
 #include "base/dictionary.hpp"
-#include <boost/test/unit_test.hpp>
+#include <BoostTestTargetConfig.h>
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 
