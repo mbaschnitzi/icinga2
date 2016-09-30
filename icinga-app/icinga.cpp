@@ -646,7 +646,6 @@ VOID WINAPI ServiceMain(DWORD argc, LPSTR *argv)
 
 	ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 	l_Job = CreateJobObject(NULL, NULL);
-	Utility::Sleep(15);
 
 	for (;;) {
 		LPSTR arg = argv[0];
@@ -737,7 +736,6 @@ int main(int argc, char **argv)
 	/* Set command-line arguments. */
 	Application::SetArgC(argc);
 	Application::SetArgV(argv);
-	Utility::Sleep(15);
 
 #ifdef _WIN32
 	if (argc > 1 && strcmp(argv[1], "--scm-install") == 0) {
