@@ -177,7 +177,7 @@ static int FormatOutput(const Dictionary::Ptr& result)
 	return creturn;
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	po::variables_map vm;
 	po::options_description desc("Options");
@@ -246,4 +246,5 @@ void main(int argc, char **argv)
 	    vm["passwd"].as<String>(), endpoint);
 
 	Application::Exit(FormatOutput(result));
+	return 255;
 }
