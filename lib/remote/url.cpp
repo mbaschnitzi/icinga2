@@ -260,7 +260,7 @@ String Url::Format(bool print_credentials) const
 			// Just one (or one empty) value
 			if (kv.second.size() == 1) {
 				param += key;
-				param += kv.second[0].IsEmpty() ? Empty : "=" + Utility::EscapeString(kv.second[0], ACQUERY_ENCODE, false);
+				param += kv.second[0].IsEmpty() ? "" : "=" + Utility::EscapeString(kv.second[0], ACQUERY_ENCODE, false);
 				continue;
 			}
 
