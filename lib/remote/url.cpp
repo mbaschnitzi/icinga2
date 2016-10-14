@@ -260,7 +260,8 @@ String Url::Format(bool print_credentials) const
 			// Just one (or one empty) value
 			if (kv.second.size() == 1) {
 				param += key;
-				param += kv.second[0].IsEmpty() ? "" : "=" + Utility::EscapeString(kv.second[0], ACQUERY_ENCODE, false);
+				param += kv.second[0].IsEmpty() ?
+				    String() : "=" + Utility::EscapeString(kv.second[0], ACQUERY_ENCODE, false);
 				continue;
 			}
 
@@ -271,7 +272,6 @@ String Url::Format(bool print_credentials) const
 					temp += "&";
 
 				temp += key;
-
 				if (kv.second.size() > 1)
 					temp += "[]";
 
@@ -384,7 +384,7 @@ bool Url::ParseQuery(const String& query)
 		String key = token.SubStr(0, pHelper);
 		String value = Empty;
 
-		if (pHelper != token.NPos && pHelper != token.GetLength() - 1)
+		if (pHelper != String::NPos && pHelper != token.GetLength() - 1)
 			value = token.SubStr(pHelper+1);
 
 		if (!ValidateToken(value, ACQUERY))

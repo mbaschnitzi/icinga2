@@ -227,7 +227,7 @@ static int FormatOutput(const Dictionary::Ptr& result)
 /* 
  *  Process arguments, initialize environment and shut down gracefully.
  */
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	po::variables_map vm;
 	po::options_description desc("Options");
@@ -304,4 +304,5 @@ void main(int argc, char **argv)
 
 	// Application::Exit() is the clean way to exit after calling InitializeBase()
 	Application::Exit(FormatOutput(result));
+	return 255;
 }
